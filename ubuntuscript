@@ -1,12 +1,13 @@
 apt -y install openssh-server
-wget https://apt.puppetlabs.com/puppet7-release-jammy.deb; dpkg -i puppet7-release-jammy.deb; apt -y update; apt -y install puppet-agent
+codename=$(grep UBUNTU_CODENAME /etc/os-release | awk -F= '{print $2}')
+wget https://apt.puppetlabs.com/puppet7-release-${codename}.deb; dpkg -i puppet7-release-${codename}.deb; apt -y update; apt -y install puppet-agent
 cat > /etc/puppetlabs/puppet/puppet.conf << EOF
 [main]
 vardir = /var/lib/puppet
 logdir = /var/log/puppet
 rundir = /var/run/puppet
 ssldir = \$vardir/ssl
- 
+
 [agent]
 pluginsync      = true
 report          = true
@@ -16,6 +17,6 @@ environment     = rc_prod
 server          = theforeman.usask.ca
 EOF
 hn=`echo $(getent hosts $(ip -o -4 address show scope global | head -n 1 | awk '{print $4}' | awk -F '/' '{print $1}') | awk '{print $2}' | awk -F '.' '{print $1}')`; sed -i "s/ictrcspare/$hn/g" "/etc/puppetlabs/puppet/puppet.conf"
-/opt/puppetlabs/bin/puppet agent -t
+/opt/puppetlabs/puppet/bin/puppet agent -t
 sleep 30
 systemctl enable --now puppet
